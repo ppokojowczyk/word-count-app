@@ -1,0 +1,15 @@
+index:
+   path: /
+   controller: App\Controller\WordCountController::hello
+
+count:
+  path: /count
+  controller: App\Controller\WordCountController::count
+
+words:
+  path: /words
+  controller: App\Controller\WordCountController::words
+
+add:
+  path: /add
+  controller: App\Controller\WordCountController::add

@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+
+    database:
+        image: mariadb:10.3
+        container_name: mariadb
+        volumes:
+            - ./database-fixture.sql:/docker-entrypoint-initdb.d/dump.sql
+        environment:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: word_count_app
+        ports:
+            - "3377:3306"
+        expose:
+            - 3306
+        networks:
+            app_net:
+                ipv4_address: 172.20.1.1
+
+    backend:
+        build: ./backend
+        expose:
+            - ${APP_SERVER_PORT}
+        environment:
+            APP_SERVER_PORT: ${APP_SERVER_PORT}
+        ports:
+            - ${APP_SERVER_PORT}:${APP_SERVER_PORT}
+        links:
+            - database
+        command: php -S 0.0.0.0:4500 ./public/index.php
+        volumes:
+            - ./backend/src:/srv/app/backend/src/
+            - ./backend/config:/srv/app/backend/config/
+        networks:
+            app_net:
+                ipv4_address: 172.20.1.2
+
+    frontend:
+        build: ./frontend
+        environment:
+            REACT_APP_PORT: ${REACT_APP_PORT}
+        expose:
+            - ${REACT_APP_PORT}
+        ports:
+            - ${REACT_APP_PORT}:${REACT_APP_PORT}
+        links:
+            - backend
+        stdin_open: true
+        tty: true
+        command: npm start
+        volumes:
+            - ./frontend/src:/srv/app/frontend/src/
+        networks:
+            app_net:
+                ipv4_address: 172.20.1.3
+
+networks:
+    app_net:
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.20.0.0/16
